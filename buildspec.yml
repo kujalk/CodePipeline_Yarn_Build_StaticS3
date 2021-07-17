@@ -1,0 +1,30 @@
+# AWS CodeBuild BuildSpec
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 14
+    commands:
+      - pip install --upgrade pip
+      - pip install --upgrade awscli
+  pre_build:
+    commands:
+      - echo Pre-build phase started .....
+      - yarn install
+  build:
+    commands:
+      - echo Build started on .......
+      - yarn build
+  post_build:
+    commands:
+      - echo PostBuild Phase started ........
+      - ls -al 
+      - ls out
+      - echo Removing file in the bucket
+      - aws s3 rm $S3_BUCKET --recursive
+      - echo Pushing the content to S3 bucket
+      - aws s3 sync ./out $S3_BUCKET
+      - echo Invalidating cloudfront 
+      - aws cloudfront create-invalidation --distribution-id $DistributionID --paths /
+      - echo Completed the deployment
